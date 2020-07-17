@@ -1,89 +1,192 @@
 import 'package:flutter/material.dart';
+import 'package:wishlist/services/wishlist_database.dart';
+import '../wishlist_model.dart';
 
-class WishListScreen extends StatelessWidget {
+class WishListScreen extends StatefulWidget {
+  @override
+  _WishListScreenState createState() => _WishListScreenState();
+}
+
+class _WishListScreenState extends State<WishListScreen> {
+  final database = WishListDatabase.db;
+  int price;
+  String product;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Your Wishlist"),
-        backgroundColor: Colors.black,
+        title: Text('Your WishList'),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {},
-        backgroundColor: Colors.black,
-        child: Icon(
-          Icons.add,
-          color: Colors.white,
+      floatingActionButton:
+          Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+        FloatingActionButton(
+          child: Icon(Icons.add),
+          onPressed: () {
+            showModalBottomSheet(
+                context: context,
+                builder: (context) {
+                  return Container(
+                    padding: EdgeInsets.all(15),
+                    child: Column(
+//                  mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        SizedBox(
+                          height: 10,
+                        ),
+                        Text('New Wish', style: TextStyle(fontSize: 20)),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        TextField(
+                          onChanged: (value) {
+                            product = value;
+                          },
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Product',
+                            helperText: 'Enter the product!',
+                          ),
+                        ),
+                        SizedBox(
+                          height: 30,
+                        ),
+                        TextField(
+                          onChanged: (value) {
+                            price = int.parse(value);
+                          },
+                          decoration: InputDecoration(
+                            border: OutlineInputBorder(),
+                            labelText: 'Price',
+                            helperText: 'Enter the price!',
+                          ),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          children: [
+                            FloatingActionButton(
+                                child: Icon(Icons.check),
+                                onPressed: () {
+                                  setState(() {
+                                    database.addToDatabase(WishList(
+                                        price: price, product: product));
+                                  });
+                                  Navigator.pop(context);
+                                })
+                          ],
+                        )
+                      ],
+                    ),
+                  );
+                });
+          },
         ),
-      ),
-      body: Container(
-        padding: EdgeInsets.all(10),
-        child: ListView(
-          children: [
-            WishListElement(),
-            WishListElement(),
-          ],
+        SizedBox(
+          width: 10,
         ),
-      ),
-    );
-  }
-}
-
-class WishListElement extends StatelessWidget {
-  const WishListElement({
-    Key key,
-  }) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 100,
-      width: 200,
-      padding: EdgeInsets.all(20),
-      margin: EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        border: Border.all(
-          color: Colors.black,
-        ),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              SizedBox(
-                width: 10,
-              ),
-              Text(
-                "1",
-                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-              ),
-              SizedBox(
-                width: 30,
-              ),
-              Container(
-                width: 0.5,
-                height: double.infinity,
-                color: Colors.black,
-              )
-            ],
-          ),
-          Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'One Plus 8',
-                style: TextStyle(fontSize: 20),
-              ),
-              Text(
-                '3000',
-                style: TextStyle(fontSize: 20),
-              )
-            ],
-          )
-        ],
-      ),
+        FloatingActionButton(
+          onPressed: () {
+            setState(() {
+              database.deleteAll();
+            });
+          },
+          child: Icon(Icons.delete),
+        )
+      ]),
+      body: FutureBuilder<List<WishList>>(
+          future: database.getFullWishList(),
+          builder:
+              (BuildContext context, AsyncSnapshot<List<WishList>> snapshot) {
+            if (snapshot.hasData) {
+              return ListView.builder(
+                  itemCount: snapshot.data.length,
+                  itemBuilder: (context, index) {
+                    WishList element = snapshot.data[index];
+                    return ListTile(
+                      onTap: () {
+                        int priceOfElement = element.price;
+                        String previousProduct = element.product;
+                        showModalBottomSheet(
+                            context: context,
+                            builder: (context) {
+                              return Container(
+                                padding: EdgeInsets.all(15),
+                                child: Column(
+                                  children: [
+                                    SizedBox(
+                                      height: 10,
+                                    ),
+                                    Text('Update Wish',
+                                        style: TextStyle(fontSize: 20)),
+                                    SizedBox(
+                                      height: 30,
+                                    ),
+                                    TextField(
+                                      onChanged: (value) {
+                                        product = value;
+                                      },
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: '$previousProduct',
+                                        helperText: 'Enter the product!',
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 30,
+                                    ),
+                                    TextField(
+                                      onChanged: (value) {
+                                        price = int.parse(value);
+                                      },
+                                      decoration: InputDecoration(
+                                        border: OutlineInputBorder(),
+                                        labelText: '$priceOfElement',
+                                        helperText: 'Enter the price!',
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      height: 20,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        FloatingActionButton(
+                                            child: Icon(Icons.check),
+                                            onPressed: () {
+                                              setState(() {
+                                                database.updateWish(WishList(
+                                                    price: price,
+                                                    product: product,
+                                                    id: element.id));
+                                              });
+                                              Navigator.pop(context);
+                                            })
+                                      ],
+                                    )
+                                  ],
+                                ),
+                              );
+                            });
+                      },
+                      onLongPress: () {
+                        setState(() {
+                          database.deleteWishListWithId(element.id);
+                        });
+                      },
+                      title: Text(element.product),
+                      subtitle: Text(element.price.toString()),
+                      leading: Text((index + 1).toString()),
+                    );
+                  });
+            } else {
+              return Center(
+                child: CircularProgressIndicator(),
+              );
+            }
+          }),
     );
   }
 }

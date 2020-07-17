@@ -6,10 +6,10 @@ import 'package:sqflite/sqflite.dart';
 import 'package:wishlist/wishlist_model.dart';
 import 'dart:async';
 
-class WishlistDatabase {
-  WishlistDatabase._();
+class WishListDatabase {
+  WishListDatabase._();
 
-  static final WishlistDatabase db = WishlistDatabase._();
+  static final WishListDatabase db = WishListDatabase._();
   Database _database;
 
   Future<Database> get database async {
@@ -25,11 +25,12 @@ class WishlistDatabase {
     String path = join(directory.path, "wishlist.db");
     return await openDatabase(path, version: 1,
         onCreate: (Database db, int version) async {
-      await db.execute("CREATE TABLE WishList("
-          "index integer primary key AUTOINCREMENT,"
-          "price integer,"
-          "product TEXT"
-          ") ");
+      await db.execute("""
+      CREATE TABLE WishList(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          price INTEGER,
+          product TEXT
+          ) """);
     });
   }
 
@@ -40,27 +41,34 @@ class WishlistDatabase {
     return a;
   }
 
-  Future<WishList> getWishListByIndex(int index) async {
+  Future<WishList> getWishListById(int id) async {
     final db = await database;
-    var response =
-        await db.query("WishList", where: "index = ?", whereArgs: [index]);
+    var response = await db.query("WishList", where: "id = ?", whereArgs: [id]);
     return response.isNotEmpty ? WishList.fromMap(response.first) : null;
   }
 
   Future<List<WishList>> getFullWishList() async {
     final db = await database;
     var response = await db.query("WishList");
-    List<WishList> list = response.map((e) => WishList.fromMap(e));
+    List<WishList> list = response.isNotEmpty
+        ? response.map((e) => WishList.fromMap(e)).toList()
+        : [];
     return list;
   }
 
-  Future<int> deleteWishListWithId(int index) async {
+  Future<int> deleteWishListWithId(int id) async {
     final db = await database;
-    return db.delete("WishList", where: "index = ?", whereArgs: [index]);
+    return db.delete("WishList", where: "id= ?", whereArgs: [id]);
   }
 
   void deleteAll() async {
     final db = await database;
     db.delete("WishList");
+  }
+
+  Future<int> updateWish(WishList wishList) async{
+    final db = await database;
+    var response = db.update('WishList', wishList.toMap(), where: 'id = ?', whereArgs: [wishList.id]);
+    return response;
   }
 }
