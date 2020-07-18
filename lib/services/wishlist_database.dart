@@ -66,9 +66,10 @@ class WishListDatabase {
     db.delete("WishList");
   }
 
-  Future<int> updateWish(WishList wishList) async{
+  Future<int> updateWish(WishList wishList) async {
     final db = await database;
-    var response = db.update('WishList', wishList.toMap(), where: 'id = ?', whereArgs: [wishList.id]);
+    var response = db.update('WishList', wishList.toMap(),
+        where: 'id = ?', whereArgs: [wishList.id]);
     return response;
   }
 }
