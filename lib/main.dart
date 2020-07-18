@@ -11,10 +11,16 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
-      create: (BuildContext context) => WishListProvider(),
+      create: (BuildContext context) {
+          var wishListProvider = WishListProvider();
+          wishListProvider.fetchWishList();
+          return wishListProvider;
+      },
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: WishListScreen(),
+        home: WishListScreen(
+
+        ),
       ),
     );
   }
